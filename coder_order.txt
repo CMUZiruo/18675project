@@ -1,0 +1,92 @@
+We have a plan of a robot arm with palm to manipulate objects and we want you to turn that into 
+the corresponding program with following functions:
+
+Rules:
+1. Always format the code in code blocks. In your response execute_plan should be called exactly once at the end.
+2. Do not invent new functions or classes. The only allowed functions you can call are the ones listed below. Do not leave unimplemented code blocks in your response.
+3. The only allowed library is numpy. Do not import or use any other library.
+4. If you are not sure what value to use, just use your best judge. Do not use None for anything.
+5. Do not calculate the position or direction of any object (except for the ones provided above). Just use a number directly based on your best guess.
+6. You do not need to make the robot do extra things not mentioned in the plan such as stopping the robot.
+7. If showing warning, don't generate any code.
+
+
+```
+def gripping_force_constraint(name_obj_A, name_obj_B, max_force=5.0)
+```
+this constraint is to assure the gripping force between name_obj_A and name_obj_B is not allowed to exceed "max_force"
+default "max_force" = 5.0 but it can be modified according to the material properties of grasped objects and to a stable gripping force
+
+```
+def safe_distance_constraint(name_obj_1, name_obj_2, sensing_fc_dict)
+```
+this constraint is to assure the distance between name_obj_1 and name_obj_1 must not below "safe_distance"
+name_obj_1 (e.g., robot arm, palm, human, bottle, target) and name_obj_2 (e.g., robot arm, palm, human, bottle, target) could be anything depneding on context of the provided motion plan
+default "safe distance"=1.0. Make sure the size of name_obj_1 and name_obj_2 are the same.
+
+```
+def safe_speed_constraint(max_speed=1)
+```
+set the constraint on the robot speed. The robot velocity must not exceed the "max_speed"
+default "max_speed"=0.1, but it can be modified according to distances between robots and external objects
+
+```
+def safe_contact_force_constraint(name_obj_1, name_obj_2, max_force=1.0)
+```
+the constraint to assure that the contact force between the name_obj_1 and name_obj_2 must below "max_force"
+name_obj_1 (e.g., robot arm, palm, human) and name_obj_2 (e.g., robot arm, palm, human) could be anything depneding on context of the provided motion plan
+default "max_force"=1.0
+
+```
+def set_l2_distance_reward(name_obj_A, name_obj_B)
+```
+where name_obj_A and name_obj_B are selected from ['palm', 'apple', 'banana', 'box', 'bowl', 'drawer_handle', 'faucet_handle', 'drawer_center', 'rest_position', 'target_position'].
+This term sets a reward for minimizing l2_distance between name_obj_A and name_obj_B so they get closer to each other.
+rest_position is the default position for the palm when it's holding in the air.
+target_position is the default position for the object to be puhsed or shifted on the x-y 2D plane
+
+```
+def execute_plan(duration=4) -> rewards
+```
+This function sends the parameters to the robot and execute the plan for `duration` seconds, default to be 2. The function should return rewards
+
+```
+def reset_reward()
+```
+This function resets the reward to default values.
+
+
+Example plan:
+To perform this task, the manipulator's palm should move close to object1=apple.
+object1 should be close to object2=bowl.
+object2 needs to be rotated by 30 degrees along x axis.
+object2 needs to be lifted to a height of 1.0.
+
+This is the first plan for a new task.
+
+Example answer code:
+"""
+import numpy as np
+
+reset_reward() # This is a new task so reset reward; otherwise we don't need it
+set_l2_distance_reward("palm", "apple")
+set_l2_distance_reward("apple", "bowl")
+set_obj_orientation_reward("bowl", np.deg2rad(30))
+set_obj_z_position_reward("bowl", 1.0)
+
+
+rewards = execute_plan(3)
+"""
+
+Example plan:
+warning:the task instruction is self-conflicting, pause for the next commands.
+
+This is not the first plan for a new task.
+
+Example answer code:
+"""
+import numpy as np
+rewards = 0
+"""
+
+If you understand, say Yes.

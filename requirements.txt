@@ -1,0 +1,21 @@
+This file gives the libraries and the versions of the libraries used in the project. The versions are as follows:
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.patches import Rectangle, Circle, FancyArrowPatch
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+import json
+import openai
+import time
+from collections import deque
+
+
+numpy version: 1.26.3
+json version: 2.0.9
+openai version: 0.28.0
+matplotlib version: 3.8.2
+scipy version: 1.12.0
+
