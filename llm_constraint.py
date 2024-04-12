@@ -9,7 +9,6 @@ import openai
 import time
 from collections import deque
 
-# test test
 # numpy version: 1.26.3
 # json version: 2.0.9
 # openai version: 0.28.0
@@ -35,7 +34,7 @@ L2 = 0.8  # Length of the second link
 W2 = 0.2
 # Initial joint angles
 theta1_initial = np.deg2rad(90)
-theta2_initial = np.deg2rad(-60)
+theta2_initial = np.deg2rad(180)
 #theta1_initial = np.deg2rad(30)
 #theta2_initial = np.deg2rad(30)
 
@@ -109,9 +108,13 @@ def execute_plan(duration=4):
     # Calculate the number of time steps
     num_steps = int(duration / controller.dt)
     for i in range(num_steps):
-        
-        #if RobotArm.contact != True:
-        controller.update_dynamic_object_position(controller.dt)
+
+        # detect if contact
+        controller.detect_contact()
+
+        # if not contact, update dynamic object position
+        if controller.contact == False:
+            controller.update_dynamic_object_position(controller.dt)
 
         state = robot_arm.get_joint_angles()
         #set a position for the dynamic object that was defined in robot.py
@@ -193,7 +196,7 @@ for i in range(100):
 
     print("\nWaiting for the next LLM call due to free trial usage limits")
     # print("\nWe are using ",openai.Model)
-    time.sleep(10)
+    time.sleep(5)
     # Motion descriptor call
     md_response = llm_call(md_messages, temperature=md_temp)
     md_response_mess = md_response["choices"][0]["message"]
@@ -204,7 +207,7 @@ for i in range(100):
                         "content": md_response_content})
 
     print("\nWaiting for the next LLM call due to free trial usage limits")
-    time.sleep(10)
+    time.sleep(5)
     # Reward coder call
     rc_response = llm_call(rc_messages, temperature=rc_temp)
     print(rc_response)

@@ -181,12 +181,13 @@ class Controller():
         # get robot 
         self.robot = robot
         # object state
-        self.current_xa = np.array([1.0, 0.6]) # apple pos
-        self.current_xb = np.array([0.4, 0.7]) # box pos
+        self.current_xa = np.array([-1.0, 1.0]) # apple pos
+        self.current_xb = np.array([0.3, 0.7]) # box pos
 
         self.current_xe = np.array([0., 0.])
         self.break_contact = False
-        
+
+        self.contact = False
 
         # MPC parameters
         self.control_dim = 2
@@ -204,6 +205,8 @@ class Controller():
     def update_dynamic_object_position(self, dt):
         
         # Calculate the new position
+        if self.dynamic_object["x"] >= 1.5:
+            self.dynamic_object["x"] = -1.5
         self.dynamic_object["x"] +=  1 * dt
         self.dynamic_object["y"] +=  0 * dt
        
@@ -310,6 +313,19 @@ class Controller():
     def get_target_pos(self):
         return np.array([0.0, 1.0])
 
+    def detect_contact(self):
+        
+        distance = np.linalg.norm(self.current_xe - self.current_bottle)
+        if distance < 1e-3:
+            self.contact = True
+        # else:
+        #     self.contact = False
+
+        return self.contact
+
+    def detect_safty(self, constrain):
+        if constrain < 0.1:
+            
 
 def l2_distance_reward(name_obj_A, name_obj_B, sensing_fc_dict):
     """
@@ -354,3 +370,7 @@ def safe_speed_constraint(max_speed=1):
         else:
             return 0
     return constraint          
+
+
+
+
