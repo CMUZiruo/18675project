@@ -70,6 +70,23 @@ def set_l2_distance_reward(name_obj_A, name_obj_B):
     controller.update_reward_functions(func_params)
 
 # define a function for safe_distance_constraint
+# def safe_distance_constraint(name_obj_A, name_obj_B, sensing_fc_dict):
+#     """
+#     where name_obj_A and name_obj_B are selected from ['palm', 'apple', 'banana', 'box', 'bowl', 'drawer_handle', 'faucet_handle', 'drawer_center', 'rest_position'].
+#     This term sets a constraint for maintaining a safe distance between name_obj_A and name_obj_B.
+#     rest_position is the default position for the palm when it's holding in the air.
+#     Default weight: 5
+#     """
+#     pos_A =  sensing_fc_dict[name_obj_A]()
+#     print(pos_A)
+#     pos_B =  sensing_fc_dict[name_obj_B]()
+#     print(pos_B)
+#     residual = pos_A - pos_B
+#     constraint = np.linalg.norm(residual) - 0.1
+
+#     return constraint
+
+
 def safe_distance_constraint(name_obj_A, name_obj_B, sensing_fc_dict):
     """
     where name_obj_A and name_obj_B are selected from ['palm', 'apple', 'banana', 'box', 'bowl', 'drawer_handle', 'faucet_handle', 'drawer_center', 'rest_position'].
@@ -77,14 +94,10 @@ def safe_distance_constraint(name_obj_A, name_obj_B, sensing_fc_dict):
     rest_position is the default position for the palm when it's holding in the air.
     Default weight: 5
     """
-    pos_A =  sensing_fc_dict[name_obj_A]()
-    print(pos_A)
-    pos_B =  sensing_fc_dict[name_obj_B]()
-    print(pos_B)
-    residual = pos_A - pos_B
-    constraint = np.linalg.norm(residual) - 0.1
-
-    return constraint
+    constraint = sensing_fc_dict.values()
+    print(constraint)
+    controller.safe_distance = list(constraint)[0]
+    robot_arm.avoid_object = name_obj_B
 
 def safe_speed_constraint(max_speed=1):
     def constraint(control):
@@ -98,7 +111,7 @@ def execute_plan(duration=4):
     """
     This function sends the parameters to the robot and execute the plan for `duration` seconds, default to be 2
     """
-    duration = 3
+    duration = 5
     # control_seq = np.random.rand(controller.control_dim*controller.horizon)
     control_seq = np.zeros(controller.control_dim*controller.horizon)
     control_bounds = [(-1.0, 1.0)] * (controller.control_dim*controller.horizon)
@@ -108,10 +121,11 @@ def execute_plan(duration=4):
     # Calculate the number of time steps
     num_steps = int(duration / controller.dt)
     for i in range(num_steps):
-
+        
+        
         # detect if contact
         controller.detect_contact()
-
+        
         # if not contact, update dynamic object position
         if controller.contact == False:
             controller.update_dynamic_object_position(controller.dt)
@@ -128,8 +142,20 @@ def execute_plan(duration=4):
         control_seq = result.x
         optimal_control = control_seq[0:controller.control_dim]
         # print(np.rad2deg(optimal_control))
+
+        #determine the position of avoiding object
+        if robot_arm.avoid_object == "bottle":
+            pos_B = controller.current_bottle
+        elif robot_arm.avoid_object == "box":
+            pos_B = controller.current_xb
+        elif robot_arm.avoid_object == "apple":
+            pos_B = controller.current_xa
+
         # update robot state
-        robot_arm.update_robot_states(optimal_control, controller.dt)
+        robot_arm.update_robot_states(optimal_control, controller.dt, controller.current_xe, pos_B, controller.safe_distance)
+
+        #robot_arm.detect_safty(controller.current_xe, controller.current_xb, controller.safe_distance)
+
         # Get the optimized reward value (negative of the total_reward)
         optimized_reward = controller.compute_reward(optimal_control)
         rewards.append(optimized_reward)

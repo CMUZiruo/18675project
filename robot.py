@@ -20,6 +20,7 @@ class RobotArm:
             "x": 0.5,  # Initial x-coordinate
             "y": 0.7,  # Initial y-coordinate
         }
+        self.avoid_object = None
     
     def set_dynamic_object_position(self, x, y):
         # Set the initial position of the dynamic object
@@ -30,11 +31,40 @@ class RobotArm:
         # Get the current position of the dynamic object
         return self.dynamic_object["x"], self.dynamic_object["y"]
 
-    def update_robot_states(self, control, sampling_rate):
-        self.q_dot = control
+    # def update_robot_states(self, control, sampling_rate):
+    #     self.q_dot = control
+    #     self.theta1 += self.q_dot[0] * sampling_rate
+    #     self.theta2 += self.q_dot[1] * sampling_rate
+    
+
+    def update_robot_states(self, control, sampling_rate, pos_A, pos_B, safe_distance):
+        residual = pos_A - pos_B
+        distance = np.linalg.norm(residual)
+        if safe_distance > 0.1:
+            safe_distance = 0.1
+        if (safe_distance != 0) and (distance < safe_distance + 0.2):
+            direction = np.zeros(2)
+            if pos_A[0] > pos_B[0]:
+                direction[0] = -1
+            elif pos_A[0] < pos_B[0]:
+                direction[0] = 1
+            
+            if pos_A[1] > pos_B[1]:
+                direction[1] = -1
+            elif pos_A[1] < pos_B[1]:
+                direction[1] = 1
+
+            print("collision alert")
+            direction = [0,1]
+            self.q_dot = direction
+
+        else:
+            self.q_dot = control
+
         self.theta1 += self.q_dot[0] * sampling_rate
         self.theta2 += self.q_dot[1] * sampling_rate
-        
+
+
     def update_contact_vector(self, contact_vector):
         self.contact_vector = contact_vector
 
@@ -162,6 +192,14 @@ class RobotArm:
         
         return J
 
+    # def detect_safty(self, pos_A, pos_B, safe_distance):
+
+    #     residual = pos_A - pos_B
+    #     distance = np.linalg.norm(residual)
+    #     if distance < safe_distance + 0.2:
+    #         print("collision alert")
+    #         self.q_dot = np.zeros(2)
+
 
 class Controller():
     def __init__(self, robot):
@@ -176,19 +214,21 @@ class Controller():
                                 }     
         self.dynamic_object = {
             "x": 0.5,  # Initial x-coordinate
-            "y": 0.7,  # Initial y-coordinate
+            "y": 1.0,  # Initial y-coordinate
         }  
         # get robot 
         self.robot = robot
         # object state
-        self.current_xa = np.array([-1.0, 1.0]) # apple pos
-        self.current_xb = np.array([0.3, 0.7]) # box pos
+        self.current_xa = np.array([1.0, 0]) # apple pos
+        self.current_xb = np.array([0.5, 0.5]) # box pos
 
         self.current_xe = np.array([0., 0.])
         self.break_contact = False
 
         self.contact = False
 
+        # safe distance
+        self.safe_distance = 0
         # MPC parameters
         self.control_dim = 2
         self.horizon = 5
@@ -207,7 +247,7 @@ class Controller():
         # Calculate the new position
         if self.dynamic_object["x"] >= 1.5:
             self.dynamic_object["x"] = -1.5
-        self.dynamic_object["x"] +=  1 * dt
+        self.dynamic_object["x"] +=  0.25 * dt
         self.dynamic_object["y"] +=  0 * dt
        
 
@@ -323,8 +363,11 @@ class Controller():
 
         return self.contact
 
-    def detect_safty(self, constrain):
-        if constrain < 0.1:
+    
+        
+
+
+    
             
 
 def l2_distance_reward(name_obj_A, name_obj_B, sensing_fc_dict):
