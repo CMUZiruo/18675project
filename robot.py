@@ -38,25 +38,28 @@ class RobotArm:
     
 
     def update_robot_states(self, control, sampling_rate, pos_A, pos_B, safe_distance):
-        residual = pos_A - pos_B
-        distance = np.linalg.norm(residual)
-        if safe_distance > 0.1:
-            safe_distance = 0.1
-        if (safe_distance != 0) and (distance < safe_distance + 0.2):
-            direction = np.zeros(2)
-            if pos_A[0] > pos_B[0]:
-                direction[0] = -1
-            elif pos_A[0] < pos_B[0]:
-                direction[0] = 1
-            
-            if pos_A[1] > pos_B[1]:
-                direction[1] = -1
-            elif pos_A[1] < pos_B[1]:
-                direction[1] = 1
+        if pos_B != None:
+            residual = pos_A - pos_B
+            distance = np.linalg.norm(residual)
+            if safe_distance > 0.1:
+                safe_distance = 0.1
+            if (safe_distance != 0) and (distance < safe_distance + 0.2):
+                direction = np.zeros(2)
+                if pos_A[0] > pos_B[0]:
+                    direction[0] = -1
+                elif pos_A[0] < pos_B[0]:
+                    direction[0] = 1
+                
+                if pos_A[1] > pos_B[1]:
+                    direction[1] = -1
+                elif pos_A[1] < pos_B[1]:
+                    direction[1] = 1
 
-            print("collision alert")
-            direction = [0,1]
-            self.q_dot = direction
+                print("collision alert")
+                direction = [0,1]
+                self.q_dot = direction
+            else:
+                self.q_dot = control
 
         else:
             self.q_dot = control

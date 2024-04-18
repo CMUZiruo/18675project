@@ -150,6 +150,8 @@ def execute_plan(duration=4):
             pos_B = controller.current_xb
         elif robot_arm.avoid_object == "apple":
             pos_B = controller.current_xa
+        else:
+            pos_B = None
 
         # update robot state
         robot_arm.update_robot_states(optimal_control, controller.dt, controller.current_xe, pos_B, controller.safe_distance)
