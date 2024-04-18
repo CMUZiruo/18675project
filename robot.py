@@ -1,6 +1,7 @@
 
 import numpy as np
 # Define the RobotArm class
+
 class RobotArm:
     def __init__(self, link_length_1, 
                        link_length_2, 
@@ -38,7 +39,7 @@ class RobotArm:
     
 
     def update_robot_states(self, control, sampling_rate, pos_A, pos_B, safe_distance):
-        if pos_B != None:
+        if len(pos_B) != 0:
             residual = pos_A - pos_B
             distance = np.linalg.norm(residual)
             if safe_distance > 0.1:
@@ -46,14 +47,14 @@ class RobotArm:
             if (safe_distance != 0) and (distance < safe_distance + 0.2):
                 direction = np.zeros(2)
                 if pos_A[0] > pos_B[0]:
-                    direction[0] = -1
+                    direction[0] = -2
                 elif pos_A[0] < pos_B[0]:
-                    direction[0] = 1
+                    direction[0] = 2
                 
                 if pos_A[1] > pos_B[1]:
-                    direction[1] = -1
+                    direction[1] = -2
                 elif pos_A[1] < pos_B[1]:
-                    direction[1] = 1
+                    direction[1] = 2
 
                 print("collision alert")
                 direction = [0,1]
@@ -64,8 +65,8 @@ class RobotArm:
         else:
             self.q_dot = control
 
-        self.theta1 += self.q_dot[0] * sampling_rate
-        self.theta2 += self.q_dot[1] * sampling_rate
+        self.theta1 += self.q_dot[0] * sampling_rate * 1.5
+        self.theta2 += self.q_dot[1] * sampling_rate * 1.5
 
 
     def update_contact_vector(self, contact_vector):
@@ -250,7 +251,7 @@ class Controller():
         # Calculate the new position
         if self.dynamic_object["x"] >= 1.5:
             self.dynamic_object["x"] = -1.5
-        self.dynamic_object["x"] +=  0.25 * dt
+        self.dynamic_object["x"] +=  2 * dt
         self.dynamic_object["y"] +=  0 * dt
        
 
