@@ -169,11 +169,13 @@ def execute_plan(duration=4):
         
 
         pid_reward = controller.update_pid(optimized_reward,actual[i-1])
-        print("optimized_reward",optimized_reward)
+        #print("optimized_reward",optimized_reward)
         actual[i] = actual[i-1]+pid_reward*controller.dt
         rewards.append(pid_reward)
-        
-        print(actual)
+        print("optimized_reward",pid_reward)
+        if np.abs(pid_reward) < 1e-2:
+            break
+        #print(actual)
         #print("[{}/20]Reward: {}".format(i+1, -distace_reward(xe, get_apple_pos())))
         plt.pause(controller.dt)
     print("Final Reward: {}".format(rewards[-1]))

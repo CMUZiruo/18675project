@@ -231,9 +231,9 @@ class Controller():
 
         self.contact = False
 
-        self.kp = 100.0
-        self.ki = 0.1
-        self.kd = 0.05
+        self.kp = 0.05
+        self.ki = 0
+        self.kd = 0.5
 
         self.integral = 0
         self.prev_error = 0
