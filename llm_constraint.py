@@ -111,7 +111,7 @@ def execute_plan(duration=4):
     """
     This function sends the parameters to the robot and execute the plan for `duration` seconds, default to be 2
     """
-    duration = 5
+    duration = 3
     # control_seq = np.random.rand(controller.control_dim*controller.horizon)
     control_seq = np.zeros(controller.control_dim*controller.horizon)
     control_bounds = [(-1.0, 1.0)] * (controller.control_dim*controller.horizon)
@@ -120,6 +120,8 @@ def execute_plan(duration=4):
     print("Initial reward: {}".format(initial_reward))
     # Calculate the number of time steps
     num_steps = int(duration / controller.dt)
+    actual = np.zeros(num_steps)
+    
     for i in range(num_steps):
         
         
@@ -143,6 +145,10 @@ def execute_plan(duration=4):
         optimal_control = control_seq[0:controller.control_dim]
         # print(np.rad2deg(optimal_control))
 
+        out = np.linalg.norm(optimal_control)
+
+        
+
         #determine the position of avoiding object
         if robot_arm.avoid_object == "bottle":
             pos_B = controller.current_bottle
@@ -160,7 +166,14 @@ def execute_plan(duration=4):
 
         # Get the optimized reward value (negative of the total_reward)
         optimized_reward = controller.compute_reward(optimal_control)
-        rewards.append(optimized_reward)
+        
+
+        pid_reward = controller.update_pid(optimized_reward,actual[i-1])
+        print("optimized_reward",optimized_reward)
+        actual[i] = actual[i-1]+pid_reward*controller.dt
+        rewards.append(pid_reward)
+        
+        print(actual)
         #print("[{}/20]Reward: {}".format(i+1, -distace_reward(xe, get_apple_pos())))
         plt.pause(controller.dt)
     print("Final Reward: {}".format(rewards[-1]))

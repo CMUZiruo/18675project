@@ -231,6 +231,13 @@ class Controller():
 
         self.contact = False
 
+        self.kp = 100.0
+        self.ki = 0.1
+        self.kd = 0.05
+
+        self.integral = 0
+        self.prev_error = 0
+
         # safe distance
         self.safe_distance = 0
         # MPC parameters
@@ -240,6 +247,16 @@ class Controller():
         # predict_state, not actual state
         self.state_ = np.array([0, 0]) 
         self.reward_functions = []
+
+    def update_pid(self, set_point, measured_value):
+        error = set_point - measured_value
+        self.integral += error * self.dt
+        derivative = (error - self.prev_error) / self.dt
+        
+        output = (self.kp * error) + (self.ki * self.integral) + (self.kd * derivative)
+        self.prev_error = error
+        
+        return output
     
     def set_dynamic_object_position(self, x, y):
         # Set the initial position of the dynamic object
@@ -355,7 +372,7 @@ class Controller():
         return self.current_xb
     
     def get_target_pos(self):
-        return np.array([0.0, 1.0])
+        return np.array([0.0, 1.5])
 
     def detect_contact(self):
         
