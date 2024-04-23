@@ -111,7 +111,7 @@ def execute_plan(duration=4):
     """
     This function sends the parameters to the robot and execute the plan for `duration` seconds, default to be 2
     """
-    duration = 3
+    duration = 5
     # control_seq = np.random.rand(controller.control_dim*controller.horizon)
     control_seq = np.zeros(controller.control_dim*controller.horizon)
     control_bounds = [(-1.0, 1.0)] * (controller.control_dim*controller.horizon)
@@ -122,6 +122,7 @@ def execute_plan(duration=4):
     num_steps = int(duration / controller.dt)
     actual = np.zeros(num_steps)
     
+
     for i in range(num_steps):
         
         
@@ -160,6 +161,8 @@ def execute_plan(duration=4):
             pos_B = []
 
         # update robot state
+        # pos_A = controller.current_xe
+
         robot_arm.update_robot_states(optimal_control, controller.dt, controller.current_xe, pos_B, controller.safe_distance)
 
         #robot_arm.detect_safty(controller.current_xe, controller.current_xb, controller.safe_distance)
@@ -172,9 +175,9 @@ def execute_plan(duration=4):
         #print("optimized_reward",optimized_reward)
         actual[i] = actual[i-1]+pid_reward*controller.dt
         rewards.append(pid_reward)
-        print("optimized_reward",pid_reward)
-        if np.abs(pid_reward) < 1e-2:
-            break
+        #print("optimized_reward",pid_reward)
+        # if np.abs(pid_reward) < 1e-2:
+        #     break
         #print(actual)
         #print("[{}/20]Reward: {}".format(i+1, -distace_reward(xe, get_apple_pos())))
         plt.pause(controller.dt)

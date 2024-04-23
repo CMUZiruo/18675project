@@ -17,6 +17,7 @@ class RobotArm:
         self.contact_height = 0.
         self.contact = False
         self.contact_vector = np.zeros(2)
+        self.avoid_direction = []
         self.dynamic_object = {
             "x": 0.5,  # Initial x-coordinate
             "y": 0.7,  # Initial y-coordinate
@@ -45,28 +46,31 @@ class RobotArm:
             if safe_distance > 0.1:
                 safe_distance = 0.1
             if (safe_distance != 0) and (distance < safe_distance + 0.2):
-                direction = np.zeros(2)
-                if pos_A[0] > pos_B[0]:
-                    direction[0] = -2
-                elif pos_A[0] < pos_B[0]:
-                    direction[0] = 2
                 
-                if pos_A[1] > pos_B[1]:
-                    direction[1] = -2
-                elif pos_A[1] < pos_B[1]:
-                    direction[1] = 2
+                if len(self.avoid_direction) == 0:
+                    if pos_A[0] > pos_B[0]:
+                        (self.avoid_direction).append(0)
+                    elif pos_A[0] < pos_B[0]:
+                        (self.avoid_direction).append(0)
+                    
+                    if pos_A[1] > pos_B[1]:
+                        (self.avoid_direction).append(-2)
+                    elif pos_A[1] < pos_B[1]:
+                        (self.avoid_direction).append(2)
+                    
 
                 print("collision alert")
-                direction = [0,1]
-                self.q_dot = direction
+                #direction = [1,1]
+                self.q_dot = self.avoid_direction
             else:
                 self.q_dot = control
 
         else:
             self.q_dot = control
 
-        self.theta1 += self.q_dot[0] * sampling_rate * 1.5
-        self.theta2 += self.q_dot[1] * sampling_rate * 1.5
+        self.theta1 += self.q_dot[0] * sampling_rate * 1
+        self.theta2 += self.q_dot[1] * sampling_rate * 1
+        
 
 
     def update_contact_vector(self, contact_vector):
@@ -223,17 +227,17 @@ class Controller():
         # get robot 
         self.robot = robot
         # object state
-        self.current_xa = np.array([1.0, 0]) # apple pos
-        self.current_xb = np.array([0.5, 0.5]) # box pos
+        self.current_xa = np.array([-1.0, 0]) # apple pos
+        self.current_xb = np.array([-0.5, 0.5]) # box pos
 
         self.current_xe = np.array([0., 0.])
         self.break_contact = False
 
         self.contact = False
 
-        self.kp = 0.05
-        self.ki = 0
-        self.kd = 0.5
+        self.kp = 100
+        self.ki = 0.1
+        self.kd = 0.1
 
         self.integral = 0
         self.prev_error = 0
@@ -372,7 +376,7 @@ class Controller():
         return self.current_xb
     
     def get_target_pos(self):
-        return np.array([0.0, 1.5])
+        return np.array([0.0, 1.0])
 
     def detect_contact(self):
         
