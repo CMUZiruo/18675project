@@ -18,6 +18,7 @@ class RobotArm:
         self.contact = False
         self.contact_vector = np.zeros(2)
         self.avoid_direction = []
+        self.record = []
         self.dynamic_object = {
             "x": 0.5,  # Initial x-coordinate
             "y": 0.7,  # Initial y-coordinate
@@ -376,7 +377,7 @@ class Controller():
         return self.current_xb
     
     def get_target_pos(self):
-        return np.array([0.0, 1.0])
+        return np.array([0.0, 1.5])
 
     def detect_contact(self):
         

@@ -59,7 +59,7 @@ class RobotAnimation():
         
         self.target_location = ax_animation.scatter(
                                         0.0, 
-                                        1.0, 
+                                        1.5, 
                                         color='black', 
                                         marker='x', 
                                         s=250)

@@ -67,6 +67,17 @@ def set_l2_distance_reward(name_obj_A, name_obj_B):
     func_params = {"name": l2_distance_reward,
                    "args": [name_obj_A, name_obj_B],
                    "weight": 5}
+    if name_obj_B == "target_position":
+        robot_arm.record = controller.get_target_pos()
+    elif name_obj_B == "bottle":
+        robot_arm.record = controller.get_predict_bottle_pos()
+    elif name_obj_B == "box":
+        robot_arm.record = controller.get_predict_box_pos()
+    elif name_obj_B == "apple":
+        robot_arm.record = controller.get_predict_apple_pos()
+        
+            
+
     controller.update_reward_functions(func_params)
 
 # define a function for safe_distance_constraint
@@ -111,7 +122,7 @@ def execute_plan(duration=4):
     """
     This function sends the parameters to the robot and execute the plan for `duration` seconds, default to be 2
     """
-    duration = 5
+    duration = 10
     # control_seq = np.random.rand(controller.control_dim*controller.horizon)
     control_seq = np.zeros(controller.control_dim*controller.horizon)
     control_bounds = [(-1.0, 1.0)] * (controller.control_dim*controller.horizon)
@@ -176,8 +187,8 @@ def execute_plan(duration=4):
         actual[i] = actual[i-1]+pid_reward*controller.dt
         rewards.append(pid_reward)
         #print("optimized_reward",pid_reward)
-        # if np.abs(pid_reward) < 1e-2:
-        #     break
+        if np.linalg.norm(controller.current_xe - robot_arm.record) < 1e-5:
+            break
         #print(actual)
         #print("[{}/20]Reward: {}".format(i+1, -distace_reward(xe, get_apple_pos())))
         plt.pause(controller.dt)
