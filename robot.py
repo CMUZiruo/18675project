@@ -272,7 +272,7 @@ class Controller():
         # Calculate the new position
         if self.dynamic_object["x"] >= 1.5:
             self.dynamic_object["x"] = -1.5
-        self.dynamic_object["x"] +=  2 * dt
+        self.dynamic_object["x"] +=  0.2 * dt
         self.dynamic_object["y"] +=  0 * dt
        
 
