@@ -289,10 +289,10 @@ class Controller():
         self.time_to_change += dt
         if self.time_to_change > 0.1:
             self.time_to_change = 0
-            self.dynamic_speed_x = random.randint(-1, 1)
-            self.dynamic_speed_y = random.randint(-1, 1)
-            self.dynamic_speed_x1 = random.randint(-1, 1)
-            self.dynamic_speed_y1 = random.randint(-1, 1)
+            self.dynamic_speed_x = random.randint(-1, 1)/2
+            self.dynamic_speed_y = random.randint(-1, 1)/2
+            self.dynamic_speed_x1 = random.randint(-1, 1)/2
+            self.dynamic_speed_y1 = random.randint(-1, 1)/2
         # Calculate the new position
         if abs(self.dynamic_object["x"]) >= 1.5 or abs(self.dynamic_object["y"]) >= 2:
             self.dynamic_object["x"] = 0
@@ -437,7 +437,8 @@ class Controller():
     def detect_contact(self):
         
         distance = np.linalg.norm(self.current_xe - self.current_bottle)
-        if distance < 1e-3:
+        distance1 = np.linalg.norm(self.current_xe - self.current_bottle)
+        if distance < 1e-3 or distance1 < 1e-3:
             self.contact = True
         # else:
         #     self.contact = False
@@ -461,11 +462,15 @@ def l2_distance_reward(name_obj_A, name_obj_B, sensing_fc_dict):
     
     if name_obj_A =="bottle":
         pos_A = [sensing_fc_dict[name_obj_A]()[0], sensing_fc_dict[name_obj_A]()[1]]
+    elif name_obj_A =="bottle1":
+        pos_A = [sensing_fc_dict[name_obj_A]()[2], sensing_fc_dict[name_obj_A]()[3]]
     else:
         pos_A =  sensing_fc_dict[name_obj_A]()
     
     if name_obj_B =="bottle":
         pos_B = [sensing_fc_dict[name_obj_B]()[0], sensing_fc_dict[name_obj_B]()[1]]
+    elif name_obj_B =="bottle1":
+        pos_B = [sensing_fc_dict[name_obj_B]()[2], sensing_fc_dict[name_obj_B]()[3]]
     else:
         pos_B =  sensing_fc_dict[name_obj_B]()
     

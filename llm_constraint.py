@@ -76,7 +76,7 @@ def set_l2_distance_reward(name_obj_A, name_obj_B):
     elif name_obj_B == "apple":
         robot_arm.record = controller.get_predict_apple_pos()
     elif name_obj_B == "bottle1":
-        robot_arm.record = controller.get_predict_bottle1_pos()
+        robot_arm.record = controller.get_predict_bottle_pos()
         
             
 
