@@ -1,5 +1,6 @@
 
 import numpy as np
+import random
 # Define the RobotArm class
 
 class RobotArm:
@@ -42,6 +43,15 @@ class RobotArm:
 
     def update_robot_states(self, control, sampling_rate, pos_A, pos_B, safe_distance):
         if len(pos_B) != 0:
+            if len(pos_B) > 2:
+                pos_B1 = [pos_B["x"], pos_B["y"]]
+                pos_B2 = [pos_B["x1"], pos_B["y1"]]
+                dis1 = np.linalg.norm(pos_A - pos_B1)
+                dis2 = np.linalg.norm(pos_A - pos_B2)
+                if dis1 < dis2:
+                    pos_B = pos_B1
+                else:
+                    pos_B = pos_B2
             residual = pos_A - pos_B
             distance = np.linalg.norm(residual)
             if safe_distance > 0.1:
@@ -65,7 +75,6 @@ class RobotArm:
                 self.q_dot = self.avoid_direction
             else:
                 self.q_dot = control
-
         else:
             self.q_dot = control
 
@@ -220,16 +229,24 @@ class Controller():
                                 "target_position": self.get_target_pos,
                                 #"bottle": self.get_dynamic_object_position,
                                 "bottle": self.get_predict_bottle_pos,
+                                "bottle1":self.get_predict_bottle_pos,
                                 }     
         self.dynamic_object = {
             "x": 0.5,  # Initial x-coordinate
             "y": 1.0,  # Initial y-coordinate
-        }  
+            "x1": -0.5,  
+            "y1": 1.0,
+        } 
+        self.time_to_change = 0
+        self.dynamic_speed_x = 0
+        self.dynamic_speed_y = 0
+        self.dynamic_speed_x1 = 0
+        self.dynamic_speed_y1 = 0
         # get robot 
         self.robot = robot
         # object state
         self.current_xa = np.array([-1.0, 0]) # apple pos
-        self.current_xb = np.array([-0.5, 0.5]) # box pos
+        self.current_xb = np.array([0.5, 0.5]) # box pos
 
         self.current_xe = np.array([0., 0.])
         self.break_contact = False
@@ -269,17 +286,28 @@ class Controller():
         self.dynamic_object["y"] = y
 
     def update_dynamic_object_position(self, dt):
-        
+        self.time_to_change += dt
+        if self.time_to_change > 0.1:
+            self.time_to_change = 0
+            self.dynamic_speed_x = random.randint(-1, 1)
+            self.dynamic_speed_y = random.randint(-1, 1)
+            self.dynamic_speed_x1 = random.randint(-1, 1)
+            self.dynamic_speed_y1 = random.randint(-1, 1)
         # Calculate the new position
-        if self.dynamic_object["x"] >= 1.5:
-            self.dynamic_object["x"] = -1.5
-        self.dynamic_object["x"] +=  0.2 * dt
-        self.dynamic_object["y"] +=  0 * dt
-       
+        if abs(self.dynamic_object["x"]) >= 1.5 or abs(self.dynamic_object["y"]) >= 2:
+            self.dynamic_object["x"] = 0
+            self.dynamic_object["y"] = 0
+        if abs(self.dynamic_object["x1"]) >= 1.5 or abs(self.dynamic_object["y1"]) >= 2:
+            self.dynamic_object["x1"] = 0
+            self.dynamic_object["y1"] = 0
+        self.dynamic_object["x"] +=  self.dynamic_speed_x * dt
+        self.dynamic_object["y"] +=  self.dynamic_speed_y * dt
+        self.dynamic_object["x1"] +=  self.dynamic_speed_x1 * dt
+        self.dynamic_object["y1"] +=  self.dynamic_speed_y1 * dt
 
     def get_dynamic_object_position(self):
         # Get the current position of the dynamic object
-        return self.dynamic_object["x"], self.dynamic_object["y"]
+        return self.dynamic_object["x"], self.dynamic_object["y"], self.dynamic_object["x1"], self.dynamic_object["y1"]
 
     def system_dynamics(self, state, control):
         return state + control * self.dt
@@ -355,16 +383,43 @@ class Controller():
         # then at the next time step, apple follows the hand
         # otherwise, the apple remains unchanged
         self.current_bottle = [self.dynamic_object["x"], self.dynamic_object["y"]]
+        self.current_bottle1 = [self.dynamic_object["x1"], self.dynamic_object["y1"]]
         distace = np.linalg.norm(self.current_xe - self.current_bottle)
+        distace1 = np.linalg.norm(self.current_xe - self.current_bottle1)
         if distace < 1e-3 and not self.break_contact:
             xe = self.get_predict_eff_pos()
 
             self.dynamic_object = {
             "x": xe[0],  # Initial x-coordinate
             "y": xe[1],  # Initial y-coordinate
+            "x1": self.dynamic_object["x1"],
+            "y1": self.dynamic_object["y1"],
+            }
+        elif distace1 < 1e-3 and not self.break_contact:
+            xe = self.get_predict_eff_pos()
+            self.dynamic_object = {
+            "x": self.dynamic_object["x"],
+            "y": self.dynamic_object["y"],
+            "x1": xe[0],  # Initial x-coordinate
+            "y1": xe[1],  # Initial y-coordinate
+            }
+        return [self.dynamic_object["x"], self.dynamic_object["y"], self.dynamic_object["x1"], self.dynamic_object["y1"]]
+    
+    # def get_predict_bottle1_pos(self):
+    #     # if the hand and apple is close at this time step
+    #     # then at the next time step, apple follows the hand
+    #     # otherwise, the apple remains unchanged
+    #     self.current_bottle1 = [self.dynamic_object["x1"], self.dynamic_object["y1"]]
+    #     distace = np.linalg.norm(self.current_xe - self.current_bottle1)
+    #     if distace < 1e-3 and not self.break_contact:
+    #         xe = self.get_predict_eff_pos()
 
-        }        
-        return [self.dynamic_object["x"], self.dynamic_object["y"]]
+    #         self.dynamic_object = {
+    #         "x1": xe[0],  # Initial x-coordinate
+    #         "y1": xe[1],  # Initial y-coordinate
+
+    #     }        
+    #     return [self.dynamic_object["x1"], self.dynamic_object["y1"]]
             
     def get_predict_box_pos(self):
         # if the hand and apple is close at this time step
@@ -403,8 +458,17 @@ def l2_distance_reward(name_obj_A, name_obj_B, sensing_fc_dict):
     rest_position is the default position for the palm when it's holding in the air.
     Default weight: 5
     """
-    pos_A =  sensing_fc_dict[name_obj_A]()
-    pos_B =  sensing_fc_dict[name_obj_B]()
+    
+    if name_obj_A =="bottle":
+        pos_A = [sensing_fc_dict[name_obj_A]()[0], sensing_fc_dict[name_obj_A]()[1]]
+    else:
+        pos_A =  sensing_fc_dict[name_obj_A]()
+    
+    if name_obj_B =="bottle":
+        pos_B = [sensing_fc_dict[name_obj_B]()[0], sensing_fc_dict[name_obj_B]()[1]]
+    else:
+        pos_B =  sensing_fc_dict[name_obj_B]()
+    
     residual = pos_A - pos_B
     reward = np.linalg.norm(residual)
 
@@ -419,6 +483,7 @@ def safe_distance_constraint(name_obj_A, name_obj_B, sensing_fc_dict):
     Default weight: 5
     """
     pos_A =  sensing_fc_dict[name_obj_A]()
+    
     pos_B =  sensing_fc_dict[name_obj_B]()
     residual = pos_A - pos_B
     constraint = np.linalg.norm(residual) - 0.1

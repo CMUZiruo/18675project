@@ -75,6 +75,8 @@ def set_l2_distance_reward(name_obj_A, name_obj_B):
         robot_arm.record = controller.get_predict_box_pos()
     elif name_obj_B == "apple":
         robot_arm.record = controller.get_predict_apple_pos()
+    elif name_obj_B == "bottle1":
+        robot_arm.record = controller.get_predict_bottle1_pos()
         
             
 
@@ -141,8 +143,8 @@ def execute_plan(duration=4):
         controller.detect_contact()
         
         # if not contact, update dynamic object position
-        if controller.contact == False:
-            controller.update_dynamic_object_position(controller.dt)
+        # if controller.contact == False:
+        controller.update_dynamic_object_position(controller.dt)
 
         state = robot_arm.get_joint_angles()
         #set a position for the dynamic object that was defined in robot.py
@@ -163,7 +165,7 @@ def execute_plan(duration=4):
 
         #determine the position of avoiding object
         if robot_arm.avoid_object == "bottle":
-            pos_B = controller.current_bottle
+            pos_B = controller.dynamic_object
         elif robot_arm.avoid_object == "box":
             pos_B = controller.current_xb
         elif robot_arm.avoid_object == "apple":
@@ -293,7 +295,8 @@ for i in range(100):
                                             "box": controller.get_predict_box_pos,
                                             "target": controller.get_target_pos,
                                             #"bottle": controller.get_dynamic_object_position,
-                                            "bottle": controller.get_predict_bottle_pos
+                                            "bottle": controller.get_predict_bottle_pos,
+                                            "bottle1": controller.get_predict_bottle_pos
                                             },
                         "curr_pos": curr_pos}
     # Execute the code

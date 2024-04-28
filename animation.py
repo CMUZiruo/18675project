@@ -45,11 +45,11 @@ class RobotAnimation():
                                           marker='o', 
                                           s=200)
                                           
-        # self.bottle = ax_animation.scatter(self.bottle_target[0],
-        #                                    self.bottle_target[1],
-        #                                    color = 'blue',
-        #                                    marker = 'o',
-        #                                    s = 150)
+        self.bottle1 = ax_animation.scatter(self.dynamic_object_target[2],
+                                           self.dynamic_object_target[3],
+                                           color = 'blue',
+                                           marker = 'o',
+                                           s = 200)
         
         self.box = ax_animation.scatter(self.box_target[0], 
                                         self.box_target[1], 
@@ -80,7 +80,8 @@ class RobotAnimation():
         xe = self.robot.get_T_eff()[:2, 2]
         xa = self.controller.get_predict_apple_pos()
         xb = self.controller.get_predict_box_pos()
-        xc = self.controller.get_predict_bottle_pos()
+        xc = self.controller.get_predict_bottle_pos()[0:2]
+        xd = self.controller.get_predict_bottle_pos()[2:4]
 
         # Update link positions for animation
         self.link1.set_data([0, L1  * np.cos(theta1)], [0, L1  * np.sin(theta1)])
@@ -88,6 +89,7 @@ class RobotAnimation():
         self.apple.set_offsets(np.array([[xa[0], xa[1]]]))
         self.box.set_offsets(np.array([[xb[0], xb[1]]]))
         self.bottle.set_offsets(np.array([[xc[0], xc[1]]]))
+        self.bottle1.set_offsets(np.array([[xd[0], xd[1]]]))
 
 if __name__ == "__main__":
     from robot import RobotArm
