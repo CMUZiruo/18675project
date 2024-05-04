@@ -139,11 +139,12 @@ def execute_plan(duration=4):
     for i in range(num_steps):
         
         
-        # detect if contact
+        # detect if contact, not using
         controller.detect_contact()
         
-        # if not contact, update dynamic object position
         # if controller.contact == False:
+
+        # update dynamic object position
         controller.update_dynamic_object_position(controller.dt)
 
         state = robot_arm.get_joint_angles()

@@ -40,10 +40,11 @@ class RobotArm:
     #     self.theta1 += self.q_dot[0] * sampling_rate
     #     self.theta2 += self.q_dot[1] * sampling_rate
     
-
+    # new version robot arm state control
     def update_robot_states(self, control, sampling_rate, pos_A, pos_B, safe_distance):
         if len(pos_B) != 0:
             if len(pos_B) > 2:
+                # change the y movement of robot arm once it enter the collision region
                 pos_B1 = [pos_B["x"], pos_B["y"]]
                 pos_B2 = [pos_B["x1"], pos_B["y1"]]
                 dis1 = np.linalg.norm(pos_A - pos_B1)
@@ -57,7 +58,7 @@ class RobotArm:
             if safe_distance > 0.1:
                 safe_distance = 0.1
             if (safe_distance != 0) and (distance < safe_distance + 0.2):
-                
+                # y movement setup
                 if len(self.avoid_direction) == 0:
                     if pos_A[0] > pos_B[0]:
                         (self.avoid_direction).append(0)
@@ -71,7 +72,7 @@ class RobotArm:
                     
 
                 print("collision alert")
-                #direction = [1,1]
+                
                 self.q_dot = self.avoid_direction
             else:
                 self.q_dot = control
@@ -230,7 +231,8 @@ class Controller():
                                 #"bottle": self.get_dynamic_object_position,
                                 "bottle": self.get_predict_bottle_pos,
                                 "bottle1":self.get_predict_bottle_pos,
-                                }     
+                                }    
+        # dynamic location setup, x and y is bottle, x1 and y1 is bottle1 
         self.dynamic_object = {
             "x": 0.5,  # Initial x-coordinate
             "y": 1.0,  # Initial y-coordinate
@@ -245,6 +247,7 @@ class Controller():
         # get robot 
         self.robot = robot
         # object state
+        # initial location setup
         self.current_xa = np.array([-1.0, 0]) # apple pos
         self.current_xb = np.array([0.5, 0.5]) # box pos
 
@@ -285,15 +288,17 @@ class Controller():
         self.dynamic_object["x"] = x
         self.dynamic_object["y"] = y
 
+    # dynamic speed updat function
     def update_dynamic_object_position(self, dt):
         self.time_to_change += dt
+        # keep the updated spped for 10 frame
         if self.time_to_change > 0.1:
             self.time_to_change = 0
             self.dynamic_speed_x = random.randint(-1, 1)/2
             self.dynamic_speed_y = random.randint(-1, 1)/2
             self.dynamic_speed_x1 = random.randint(-1, 1)/2
             self.dynamic_speed_y1 = random.randint(-1, 1)/2
-        # Calculate the new position
+        # Calculate the new position and reset the location is out boundary
         if abs(self.dynamic_object["x"]) >= 1.5 or abs(self.dynamic_object["y"]) >= 2:
             self.dynamic_object["x"] = 0
             self.dynamic_object["y"] = 0
